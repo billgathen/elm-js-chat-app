@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Elm Ports Demo</title>
+  <style>
+    div.chat {
+      float: left;
+      border: 1px solid black;
+      padding: 0.5em 1em 0.5em 1em;
+      width: 45%;
+    }
+    div.text-entry-widget {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>Elm Ports Demo: internal chat app</h1>
+  </div>
+  <div>
+    <div class="chat" id="elm"></div>
+    <div class="chat" id="js">
+      <h1>JavaScript</h1>
+      <div class="text-entry-widget">
+        <textarea id="js-msg" cols="70" rows="3"></textarea>
+        <button id="js-msg-button">Send</button>
+      </div>
+      <ul id="messages"></ul>
+    </div>
+  </div>
+  <script src="elm.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
