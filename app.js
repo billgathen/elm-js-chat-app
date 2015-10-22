@@ -1,6 +1,6 @@
 // Embed Elm
 var elmDiv = document.getElementById('elm');
-var elm = Elm.embed(Elm.Main, elmDiv, { javascriptMessages: "" });
+var elm = Elm.embed(Elm.Main, elmDiv, { messagesFromJavaScript: "" });
 
 // Grab JS-driven elements
 var jsMsgButton = document.getElementById('js-msg-button');
@@ -12,7 +12,7 @@ var msgs = document.getElementById('messages');
 jsMsgButton.onclick = function() {
   var msg = jsMsg.value;
 
-  elm.ports.javascriptMessages.send(msg);
+  elm.ports.messagesFromJavaScript.send(msg);
 
   appendMessage(msg);
 
@@ -20,7 +20,7 @@ jsMsgButton.onclick = function() {
 };
 
 // Get message sent from Elm
-elm.ports.elmMessages.subscribe(function(e) {
+elm.ports.messagesFromElm.subscribe(function(e) {
   appendMessage(e);
 });
 

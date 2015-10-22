@@ -37,16 +37,6 @@ update action model =
 
 -- VIEW
 
-messageList : List String -> Html
-messageList messages =
-  let
-    messageItem message =
-      li [ ] [ text message ]
-    messageItems =
-      List.map messageItem messages
-  in
-    ul [ ] messageItems
-
 view : Signal.Address Action -> Model -> Html
 view address model =
   div [ ]
@@ -64,14 +54,25 @@ view address model =
         onClick address (ElmMessage model.field),
         id "elm-msg-button"
         ] [ text "Send" ]
-        ],
-      messageList model.messages
-      ]
+      ],
+    messageList model.messages
+    ]
+
+messageList : List String -> Html
+messageList messages =
+  let
+    messageItem message =
+      li [ ] [ text message ]
+    messageItems =
+      List.map messageItem messages
+  in
+    ul [ ] messageItems
 
 -- SIGNALS
 
 -- A mailbox is a landing spot for signals
 -- in this case, Action signals
+-- This is the "funnel" at the top of the MUV flow
 inbox : Signal.Mailbox Action
 inbox =
   Signal.mailbox NoOp -- We "prime" the signal with a NoOp
@@ -81,7 +82,9 @@ inbox =
 actions : Signal Action
 actions =
   -- We want this signal to reflect either action, so we merge them into one
-  Signal.merge inbox.signal (Signal.map JsMessage javascriptMessages)
+  -- messagesFromJavaScript is a signal of STRINGS, not ACTIONS, so we need to wrap
+  -- them first so they'll match the signal type
+  Signal.merge inbox.signal (Signal.map JsMessage messagesFromJavaScript)
 
 -- We use the update function every time the signal
 -- changes to fold the action into the model
@@ -100,8 +103,8 @@ model =
 -- pass along the value. Otherwise return Nothing.
 -- .filterMap will throw away the Nothing results, giving
 -- us a Signal of strings that change for every outgoing message
-messages : Signal String
-messages =
+elmMessages : Signal String
+elmMessages =
   let
     isElmMessage act =
       case act of
@@ -114,12 +117,15 @@ messages =
 
 -- PORTS
 
-port javascriptMessages : Signal String
+-- This is merged into the system in the actions function
+-- When you set up a port, Elm wires it to a signal of the same name
+-- Once the signal is created, we can treat it like any other Elm signal.
+-- Elm has no idea the initiating event came from the outside world.
+port messagesFromJavaScript : Signal String
 
--- port elmMessages : Signal (List String)
-port elmMessages : Signal String
-port elmMessages =
-  messages
+port messagesFromElm : Signal String
+port messagesFromElm =
+  elmMessages
 
 -- MAIN
 
