@@ -1,5 +1,9 @@
 module Main where
 
+-- `exposing (..)` means "add all my functions into the module namespace"
+-- so we can call `div` instead of `Html.div`, etc.
+-- If we prefer, We can be more specific by supplying a list of function names
+-- instead of the double-dot.
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -14,6 +18,10 @@ import Html.Events exposing (..)
 -- HTML to determine what changes to make to the actual page.
 
 -- MODEL
+
+-- For this chat app, we'll need to keep track of two pieces of state:
+-- 1. `field` - the current contents of the textarea, updated every time we type
+-- 2. `messages` - all the previously-submitted messages (from Elm or JS)
 
 -- `type alias` means "when I say 'Model', I mean a structure
 -- that looks like this." In our case, it's a record (basically a
@@ -50,10 +58,12 @@ type Action = NoOp | JsMessage String | ElmMessage String | UpdateField String
 -- The update function accepts the action and the current model, returning a
 -- copy (Elm data structures are immutable!) of the model with the necessary
 -- changes applied.
+--
 -- The case statement identifies which type of action we received. Note that the
 -- actions with associated Strings have a variable in the signature: the value
 -- will be automatically stored in this temporary variable so we can use it in
 -- the model update.
+--
 -- The { thing | property <- algorithm } pattern is how we get changes into the
 -- model. It copies the model, pushes the result of the algorithm into the
 -- property you supply, then returns the copy.
@@ -62,6 +72,12 @@ type Action = NoOp | JsMessage String | ElmMessage String | UpdateField String
 -- sauce of immutability: when Elm sees that the returned model is the same object
 -- as the passed-in model, it can skip all the "what should change in the view"
 -- logic, because nothing CAN change!
+--
+-- `model.messages ++ [ message ]` means "append this message to the end of the
+-- `messages` List on the model".
+--
+-- `field <- fieldContent` replaces the existing
+-- value of `field` on the model with whatever the action passed-in.
 
 update : Action -> Model -> Model
 update action model =
@@ -77,10 +93,10 @@ update action model =
 
 -- VIEW
 
--- The view maintains all of the HTML for an Elm program.
+-- The view renders the HTML for an Elm program.
 -- It uses the virtual DOM to quickly build up the complete structure
--- of your app, then compares it against the existing structure to
--- see what (if anything) needs to change.
+-- of your app, then the `main` function compares that against
+-- the existing page to see what (if anything) needs to change.
 --
 -- Like React, it renders the complete view every time, but the
 -- virtual DOM is so fast, this is a big speed increase over making
@@ -96,7 +112,7 @@ update action model =
 -- to this) and the current model.
 -- The interesting parts are the `on "input"` and `onClick` event
 -- generators. These correlate to their JS cousins, sending actions
--- back into the Elm system and triggering the model-update-view cycle.
+-- back into the Elm "funnel" and triggering the model-update-view cycle.
 --
 -- The only place I've found solid docs on the event generators is
 -- in Pragmatic Studio's video course (the 2nd one, on signals).
