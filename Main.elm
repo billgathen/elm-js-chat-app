@@ -146,39 +146,51 @@ messageList messages =
 
 -- A mailbox is a landing spot for signals. In this case, a signal of Actions.
 -- This is the "funnel" at the top of the model-update-view flow.
+--
+-- The address variable we handed to the view function allows us to
+-- push new values to this signal (which we did with the on and onClick helpers)
 inbox : Signal.Mailbox Action
 inbox =
   Signal.mailbox NoOp -- We "prime" the signal with a NoOp
 
--- We create a syntactic sugar method around the
--- inbox's signal so we know that it wraps actions
+-- However, some of our actions are coming from another source, the
+-- messagesFromJavaScript port. We'll discuss ports in a bit.
+-- In order to have one signal to listen to, we use Signal.merge
+-- to combine the values from inbox and messagesFromJavaScript.
+-- The resulting signal is called actions.
 actions : Signal Action
 actions =
-  -- We want this signal to reflect either action, so we merge them into one
-  -- messagesFromJavaScript is a signal of STRINGS, not ACTIONS, so we need to wrap
-  -- them first so they'll match the signal type
+  -- messagesFromJavaScript is a signal of STRINGS, not ACTIONS, so we
+  -- use Signal.map to wrap them in a JsMessage action so they'll match the signal type
   Signal.merge inbox.signal (Signal.map JsMessage messagesFromJavaScript)
 
--- We use the update function every time the signal
--- changes to fold the action into the model
+-- Every time the actions signal changes (we get a click from our button, for
+-- example, or receive a JS message), we trigger a foldp, applying the changes
+-- to our model.
 --
 -- foldp means "fold into the past", so update must know
 -- how to adjust the model when each type of action appears
 --
--- What comes out is a changing model, which we'll hand to
+-- The model function returns a signal of models, which we'll hand to
 -- our view function so it can re-render itself and tell
 -- the main function to update the page
 model : Signal Model
 model =
   Signal.foldp update initialModel actions
 
--- Monitor the flow of actions. When we see an ElmMessage,
--- pass along the value. Otherwise return Nothing.
--- .filterMap will throw away the Nothing results, giving
+-- We also have to send our ElmMessages back to JavaScript land!
+-- elmMessages is a signal that wraps the flow of actions.
+-- For every ElmMessage, we pass along the value. Otherwise we return Nothing.
+-- .filterMap throws away the Nothing results, giving
 -- us a Signal of strings that change for every outgoing message
 elmMessages : Signal String
 elmMessages =
   let
+    -- A let expression gives us a place to create an algorithm or
+    -- hold a temporary variable that we'll use in the main body of
+    -- the function. Here we write an isElmMessage function that
+    -- return either a Just (with the associated message String)
+    -- or Nothing.
     isElmMessage act =
       case act of
         ElmMessage t -> Just t
@@ -190,20 +202,41 @@ elmMessages =
 
 -- PORTS
 
--- This is merged into the system in the actions function
+-- Ports are holes to the outside world. There are incoming ports (which
+-- we'll use to receive messages from JavaScript) and outgoing ports
+-- (which we'll use to send messages to JavaScript)
+
+-- messagesFromJavaScript is an incoming port.
 -- When you set up a port, Elm wires it to a signal of the same name
 -- Once the signal is created, we can treat it like any other Elm signal.
 -- Elm has no idea the initiating event came from the outside world.
 port messagesFromJavaScript : Signal String
 
+-- messagesFromElm is an outgoing port, a thin wrapper around the elmMessages signal.
+-- Whenever we change the value of the signal, it will be echoed to
+-- JavaScript. We'll subscribe to this port in JavaScript and supply
+-- a callback to be executed every time the signal changes.
 port messagesFromElm : Signal String
 port messagesFromElm =
   elmMessages
 
 -- MAIN
 
+-- main is where the app bootstraps itself.
+-- We map the model signal (which changes every time we receive a new action)
+-- onto the view, so it can re-render the virtual DOM in response.
+-- The main function itself expects a signal of HTML (which view returns)
+-- and it analyzes the differences between the virtual DOM and the actual
+-- page, sending change actions to make the page match. This makes re-renders
+-- extremely fast.
+--
+-- One oddity is that Signal.map expects a function that takes one argument,
+-- but view takes 2 (the address for sending actions to and the model).
+-- To solve this problem, we "partially-apply" (or curry) the view function,
+-- passing it only the first argument. We get back a one-argument function
+-- that remembers the address and expects a model. This one-argument function
+-- can be used with Signal.map, so we're done!
+
 main : Signal Html
 main =
-  -- Need to partially-apply the view function because map
-  -- requires a function that takes one argument: the model
   Signal.map (view inbox.address) model
