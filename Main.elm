@@ -81,9 +81,11 @@ update action model =
 -- It uses the virtual DOM to quickly build up the complete structure
 -- of your app, then compares it against the existing structure to
 -- see what (if anything) needs to change.
+--
 -- Like React, it renders the complete view every time, but the
 -- virtual DOM is so fast, this is a big speed increase over making
 -- selected changes to the DOM directly.
+--
 -- The Html, Html.Attributes and Html.Events modules give us all
 -- the tools we need to build up our HTML.
 -- Each HTML element (except text) accepts two Lists: the first is
