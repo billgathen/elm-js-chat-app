@@ -95,7 +95,12 @@ update action model =
 -- The view accepts an address (a target for signals: we'll come back
 -- to this) and the current model.
 -- The interesting parts are the `on "input"` and `onClick` event
--- generators. These correlate to their JS cousins.
+-- generators. These correlate to their JS cousins, sending actions
+-- back into the Elm system and triggering the model-update-view cycle.
+--
+-- The only place I've found solid docs on the event generators is
+-- in Pragmatic Studio's video course (the 2nd one, on signals).
+-- Highly-recommended!
 
 view : Signal.Address Action -> Model -> Html
 view address model =
@@ -118,6 +123,10 @@ view address model =
     messageList model.messages
     ]
 
+-- Modularity is encouraged in the Elm ecosystem, so messageList is
+-- syntactic sugar around creating an HTML unordered list from a
+-- List of Strings. We call it from the last line of the view function,
+-- passing in model.messages.
 messageList : List String -> Html
 messageList messages =
   let
@@ -130,9 +139,13 @@ messageList messages =
 
 -- SIGNALS
 
--- A mailbox is a landing spot for signals
--- in this case, Action signals
--- This is the "funnel" at the top of the MUV flow
+-- Signals are values which can change over time. Think "streams".
+-- We can filter them, merge them and transform (aka map) them to
+-- more-useful forms. Signals are what drive the interactivity of
+-- Elm apps.
+
+-- A mailbox is a landing spot for signals. In this case, a signal of Actions.
+-- This is the "funnel" at the top of the model-update-view flow.
 inbox : Signal.Mailbox Action
 inbox =
   Signal.mailbox NoOp -- We "prime" the signal with a NoOp
