@@ -4,14 +4,33 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
+-- Elm programs follow the model-update-view structure.
+-- The model contains all the state for the app, and when
+-- a change event occurs (an action), the action and the
+-- model are fed into the update function, which returns
+-- a copy of the model with the appropriate changes applied.
+-- The new model is passed to the view function, which re-renders
+-- the HTML based on the state. Elm itself uses the updated
+-- HTML to determine what changes to make to the actual page.
+
 -- MODEL
 
+-- `type alias` means "when I say 'Model', I mean a structure
+-- that looks like this." In our case, it's a record (basically a
+-- JavaScript object without methods) containing two properties:
+-- field (a String) and messages (a List of Strings)
 type alias Model =
   {
     field : String,
     messages : List String
   }
 
+-- We'll need to bootstrap the app with default state, so we
+-- create a function that returns a record that matches the Model
+-- structure. The function declaration formally announces that this
+-- function returns a Model, but Elm has type inference (i.e., it can
+-- figure that out on its own) so it's optional. Still, I think it's
+-- good documentation.
 initialModel : Model
 initialModel =
   {
@@ -21,7 +40,28 @@ initialModel =
 
 -- UPDATE
 
+-- We need to explicitly define every legal action for the update function.
+-- To do that, we create an enumeration called Action.
+-- In our case there are four, the last three of which will always appear with
+-- a String attached. The pipes separate each of the options.
+
 type Action = NoOp | JsMessage String | ElmMessage String | UpdateField String
+
+-- The update function accepts the action and the current model, returning a
+-- copy (Elm data structures are immutable!) of the model with the necessary
+-- changes applied.
+-- The case statement identifies which type of action we received. Note that the
+-- actions with associated Strings have a variable in the signature: the value
+-- will be automatically stored in this temporary variable so we can use it in
+-- the model update.
+-- The { thing | property <- algorithm } pattern is how we get changes into the
+-- model. It copies the model, pushes the result of the algorithm into the
+-- property you supply, then returns the copy.
+--
+-- NoOp is the exception: it returns the model unchanged. This is the secret
+-- sauce of immutability: when Elm sees that the returned model is the same object
+-- as the passed-in model, it can skip all the "what should change in the view"
+-- logic, because nothing CAN change!
 
 update : Action -> Model -> Model
 update action model =
@@ -36,6 +76,24 @@ update action model =
       -> { model | field <- fieldContent }
 
 -- VIEW
+
+-- The view maintains all of the HTML for an Elm program.
+-- It uses the virtual DOM to quickly build up the complete structure
+-- of your app, then compares it against the existing structure to
+-- see what (if anything) needs to change.
+-- Like React, it renders the complete view every time, but the
+-- virtual DOM is so fast, this is a big speed increase over making
+-- selected changes to the DOM directly.
+-- The Html, Html.Attributes and Html.Events modules give us all
+-- the tools we need to build up our HTML.
+-- Each HTML element (except text) accepts two Lists: the first is
+-- the HTML attributes (id, class, event handlers, etc) and the
+-- second is the contents (the nested elements).
+--
+-- The view accepts an address (a target for signals: we'll come back
+-- to this) and the current model.
+-- The interesting parts are the `on "input"` and `onClick` event
+-- generators. These correlate to their JS cousins.
 
 view : Signal.Address Action -> Model -> Html
 view address model =

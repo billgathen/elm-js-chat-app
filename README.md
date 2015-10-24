@@ -2,7 +2,7 @@
 
 This is a demo application to explore how [Elm](http://elm-lang.org) and [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript) can interoperate.
 
-The textbox and button on the left is driven entirely by Elm. The controls on the right are pure JavaScript. They communicate by sending messages over Elm [ports](http://elm-lang.org/guide/interop#ports).
+The textbox and button on the left are driven entirely by Elm. The controls on the right are pure JavaScript. They communicate by sending messages over Elm [ports](http://elm-lang.org/guide/interop#ports).
 
 This app is intended to be a learning/teaching tool for discovering how Elm can play nicely in a mixed-language browser world. There are many annotations explaining the techniques, but it's not an intro-level project. I learned what I know about Elm mainly from the [Elm](https://pragmaticstudio.com/elm) and [Elm Signals](https://pragmaticstudio.com/elm-signals) videos from [Pragmatic Studio](http://pragmaticstudio.com) and I can't recommend them highly-enough.
 
